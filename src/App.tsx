@@ -83,32 +83,43 @@ function fetchStaff(): Promise<StaffAPIResponse> {
     });
 }
 
-function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+function onSubmit(
+  e: React.FormEvent<HTMLFormElement>,
+  formData: AppointmentAPIRequestBody,
+  setAppointmentCreated: React.Dispatch<React.SetStateAction<boolean>>,
+  setFormData: React.Dispatch<React.SetStateAction<AppointmentAPIRequestBody>>
+) {
   e.preventDefault();
+
+  const emptyFormData: AppointmentAPIRequestBody = {
+    name: "",
+    email: "",
+    dateTime: "",
+    trainerId: "",
+  };
 
   fetch(APPOINTMENT_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(FormData),
+    body: JSON.stringify(formData),
   })
     .then((response) => response.json())
     .then((data) => {
       console.log("Appointment created:", data);
       setAppointmentCreated(true);
-
-      const emptyFormData: AppointmentAPIRequestBody = {
-        name: "",
-        email: "",
-        dateTime: "",
-        trainerId: "",
-      };
+      setFormData(emptyFormData); // Clear form fields
     })
     .catch((error) => {
       console.error("Error creating appointment:", error);
     });
 }
+
+
+
+
+
 
 function App() {
   const [appointmentCreated, setAppointmentCreated] = useState(false);
@@ -118,8 +129,18 @@ function App() {
     dateTime: "",
     trainerId: "",
   });
-
   const [trainers, setTrainers] = useState<Trainer[]>([]);
+
+  const emptyFormData: AppointmentAPIRequestBody = {
+    name: "",
+    email: "",
+    dateTime: "",
+    trainerId: "",
+  };
+
+  function handleClearForm() {
+    setFormData(emptyFormData); 
+  }
 
   useEffect(() => {
     fetchStaff()
@@ -132,13 +153,17 @@ function App() {
       });
   }, []);
 
+
+  console.log("appointmentCreated:", appointmentCreated);
+console.log("formData:", formData);
+
   return (
     <div className="App">
       <header className="app__header">
         <img src={logo} className="ApP--logo" alt="logo" />
       </header>
       <main className="appmain">
-        <form className="form" onSubmit={onSubmit}>
+      <form className="form" onSubmit={(e) => onSubmit(e, formData, setAppointmentCreated, setFormData)}>
           <label
             htmlFor={config.name.name}
             id={config.name.id}
