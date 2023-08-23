@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import moment, { Moment } from "moment";
+// import moment, { Moment } from "moment";
 
 import logo from "./abc-glofox-logo.png";
 import "./App.css";
@@ -26,13 +26,13 @@ const STAFF_ENDPOINT = "https://64df526f71c3335b25826fcc.mockapi.io/trainers";
 const APPOINTMENT_ENDPOINT =
   "https://64df526f71c3335b25826fcc.mockapi.io/appointment";
 
-function toMoment(x: string): Moment {
-  const date = moment(x);
-  if (date.isValid()) {
-    return date;
-  }
-  throw new Error("computer says no");
-}
+// function toMoment(x: string): Moment {
+//   const date = moment(x);
+//   if (date.isValid()) {
+//     return date;
+//   }
+//   throw new Error("computer says no");
+// }
 
 function isTrainer(x: Staff): x is Trainer {
   return x.type === "trainer";
@@ -109,17 +109,12 @@ function onSubmit(
     .then((data) => {
       console.log("Appointment created:", data);
       setAppointmentCreated(true);
-      setFormData(emptyFormData); // Clear form fields
+      setFormData(emptyFormData);
     })
     .catch((error) => {
       console.error("Error creating appointment:", error);
     });
 }
-
-
-
-
-
 
 function App() {
   const [appointmentCreated, setAppointmentCreated] = useState(false);
@@ -130,17 +125,6 @@ function App() {
     trainerId: "",
   });
   const [trainers, setTrainers] = useState<Trainer[]>([]);
-
-  const emptyFormData: AppointmentAPIRequestBody = {
-    name: "",
-    email: "",
-    dateTime: "",
-    trainerId: "",
-  };
-
-  function handleClearForm() {
-    setFormData(emptyFormData); 
-  }
 
   useEffect(() => {
     fetchStaff()
@@ -153,9 +137,8 @@ function App() {
       });
   }, []);
 
-
   console.log("appointmentCreated:", appointmentCreated);
-console.log("formData:", formData);
+  console.log("formData:", formData);
 
   return (
     <div className="App">
@@ -163,7 +146,12 @@ console.log("formData:", formData);
         <img src={logo} className="ApP--logo" alt="logo" />
       </header>
       <main className="appmain">
-      <form className="form" onSubmit={(e) => onSubmit(e, formData, setAppointmentCreated, setFormData)}>
+        {/* <form
+          className="form"
+          onSubmit={(e) =>
+            onSubmit(e, formData, setAppointmentCreated, setFormData)
+          }
+        >
           <label
             htmlFor={config.name.name}
             id={config.name.id}
@@ -217,6 +205,87 @@ console.log("formData:", formData);
               {formData.dateTime} with the trainer {formData.trainerId}.
             </div>
           )}
+        </form> */}
+
+        <form
+          className="form"
+          onSubmit={(e) =>
+            onSubmit(e, formData, setAppointmentCreated, setFormData)
+          }
+        >
+          <label
+            htmlFor={config.name.name}
+            id={config.name.id}
+            className="field"
+          >
+            Name:
+          </label>
+          <input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+
+          <label
+            htmlFor={config.email.name}
+            id={config.email.id}
+            className="field"
+          >
+            Email:
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+
+          <label
+            htmlFor={config.dateTime.name}
+            id={config.dateTime.id}
+            className="field"
+          >
+            Date and Time:
+          </label>
+          <input
+            id="dateTime"
+            type="datetime-local"
+            value={formData.dateTime}
+            onChange={(e) =>
+              setFormData({ ...formData, dateTime: e.target.value })
+            }
+          />
+
+          <label htmlFor="trainer" className="field">
+            Trainer:
+          </label>
+          <select
+            id={config.trainer.id}
+            name={config.trainer.name}
+            value={formData.trainerId}
+            onChange={(e) =>
+              setFormData({ ...formData, trainerId: e.target.value })
+            }
+          >
+            <option value="">Select a trainer</option>
+            {trainers.map((trainer) => (
+              <option key={trainer.id} value={trainer.id}>
+                {trainer.name}
+              </option>
+            ))}
+          </select>
+
+          <button type="submit">Submit</button>
+          {appointmentCreated && (
+            <div className="message">
+              {formData.name}, your appointment is scheduled for{" "}
+              {formData.dateTime} with the trainer {formData.trainerId}.
+            </div>
+          )}
         </form>
       </main>
     </div>
@@ -224,6 +293,3 @@ console.log("formData:", formData);
 }
 
 export default App;
-function setAppointmentCreated(arg0: boolean) {
-  throw new Error("Function not implemented.");
-}
