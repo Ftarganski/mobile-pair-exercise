@@ -83,40 +83,8 @@ function fetchStaff(): Promise<StaffAPIResponse> {
     });
 }
 
-function onSubmit(
-  e: React.FormEvent<HTMLFormElement>,
-  formData: AppointmentAPIRequestBody,
-  setAppointmentCreated: React.Dispatch<React.SetStateAction<boolean>>,
-  setFormData: React.Dispatch<React.SetStateAction<AppointmentAPIRequestBody>>
-) {
-  e.preventDefault();
-
-  const emptyFormData: AppointmentAPIRequestBody = {
-    name: "",
-    email: "",
-    dateTime: "",
-    trainerId: "",
-  };
-
-  fetch(APPOINTMENT_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(formData),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Appointment created:", data);
-      setAppointmentCreated(true);
-      setFormData(emptyFormData);
-    })
-    .catch((error) => {
-      console.error("Error creating appointment:", error);
-    });
-}
-
 function App() {
+  const [showMessage, setShowMessage] = useState(false);
   const [appointmentCreated, setAppointmentCreated] = useState(false);
   const [formData, setFormData] = useState<AppointmentAPIRequestBody>({
     name: "",
@@ -125,10 +93,17 @@ function App() {
     trainerId: "",
   });
   const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const selectedTrainer = trainers.find(
+    (trainer) => trainer.id === formData.trainerId
+  );
+
+  const [submittedFormData, setSubmittedFormData] =
+    useState<AppointmentAPIRequestBody | null>(null);
 
   useEffect(() => {
     fetchStaff()
       .then((data) => {
+        console.log("Fetched trainers:", data);
         const trainerOptions = data.filter(isTrainer);
         setTrainers(trainerOptions);
       })
@@ -137,8 +112,43 @@ function App() {
       });
   }, []);
 
-  console.log("appointmentCreated:", appointmentCreated);
-  console.log("formData:", formData);
+  function onSubmit(
+    e: React.FormEvent<HTMLFormElement>,
+    formData: AppointmentAPIRequestBody,
+    setAppointmentCreated: React.Dispatch<React.SetStateAction<boolean>>,
+    setFormData: React.Dispatch<
+      React.SetStateAction<AppointmentAPIRequestBody>
+    >,
+    setShowMessage: React.Dispatch<React.SetStateAction<boolean>> // Adicione este argumento
+  ) {
+    e.preventDefault();
+
+    const emptyFormData: AppointmentAPIRequestBody = {
+      name: "",
+      email: "",
+      dateTime: "",
+      trainerId: "",
+    };
+
+    fetch(APPOINTMENT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Appointment created:", data);
+        setAppointmentCreated(true);
+        setSubmittedFormData(data);
+        setFormData(emptyFormData);
+        setShowMessage(true);
+      })
+      .catch((error) => {
+        console.error("Error creating appointment:", error);
+      });
+  }
 
   return (
     <div className="App">
@@ -146,71 +156,17 @@ function App() {
         <img src={logo} className="ApP--logo" alt="logo" />
       </header>
       <main className="appmain">
-        {/* <form
-          className="form"
-          onSubmit={(e) =>
-            onSubmit(e, formData, setAppointmentCreated, setFormData)
-          }
-        >
-          <label
-            htmlFor={config.name.name}
-            id={config.name.id}
-            className="field"
-          >
-            Name:
-          </label>
-          <input id="name" name="name" />
-
-          <label
-            htmlFor={config.email.name}
-            id={config.email.id}
-            className="field"
-          >
-            Email:
-          </label>
-          <input id="email" name="email" type="email" />
-
-          <label
-            htmlFor={config.dateTime.name}
-            id={config.dateTime.id}
-            className="field"
-          >
-            Date and Time:
-          </label>
-          <input id="dateTime" type="datetime-local" />
-
-          <label htmlFor="trainer" className="field">
-            Trainer:
-          </label>
-          <select
-            id={config.trainer.id}
-            name={config.trainer.name}
-            value={formData.trainerId}
-            onChange={(e) =>
-              setFormData({ ...formData, trainerId: e.target.value })
-            }
-          >
-            <option value="">Select a trainer</option>
-            {trainers.map((trainer) => (
-              <option key={trainer.id} value={trainer.id}>
-                {trainer.name}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit">Submit</button>
-          {appointmentCreated && (
-            <div className="message">
-              {formData.name}, your appointment is scheduled for{" "}
-              {formData.dateTime} with the trainer {formData.trainerId}.
-            </div>
-          )}
-        </form> */}
-
         <form
           className="form"
-          onSubmit={(e) =>
-            onSubmit(e, formData, setAppointmentCreated, setFormData)
+          onSubmit={
+            (e) =>
+              onSubmit(
+                e,
+                formData,
+                setAppointmentCreated,
+                setFormData,
+                setShowMessage
+              ) // Passe setShowMessage aqui
           }
         >
           <label
@@ -279,13 +235,17 @@ function App() {
             ))}
           </select>
 
-          <button type="submit">Submit</button>
-          {appointmentCreated && (
+          {selectedTrainer && submittedFormData && appointmentCreated && (
             <div className="message">
-              {formData.name}, your appointment is scheduled for{" "}
-              {formData.dateTime} with the trainer {formData.trainerId}.
+              <p>
+                Hello {submittedFormData.name}, your reservation with the
+                trainer {selectedTrainer.name} will be scheduled for the day{" "}
+                {submittedFormData.dateTime}.
+              </p>
             </div>
           )}
+
+          <button type="submit">Submit</button>
         </form>
       </main>
     </div>
